@@ -1,5 +1,5 @@
 # Gethonis
-[Link](https://gethonis-blue-grass.reflex.run/)
+[Link to Gethonis](https://gethonis-blue-grass.reflex.run/)
 ## $ intro
 This is a small Python-based project that leverages APIs from OpenAI and DeepSeek. 
 
