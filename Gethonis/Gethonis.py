@@ -7,7 +7,6 @@ from random import randint
 from rxconfig import config
 from . import about
 
-
 class State(rx.State):
     title = "Gethonis"
     value: str = "Gethonis"
@@ -20,6 +19,9 @@ class State(rx.State):
     margin_mobile = "50%"
     margin_top = "70%"
     margin_top_tab = "30%"
+    Location = 500
+    Location_mob = 400
+    CardWidth = "30%"
     dots: str = "..."
     response: str
 
@@ -28,10 +30,13 @@ class State(rx.State):
         self.i = self.i + 1
         self.show_chat = True
         self.height = 500
+        self.CardWidth = "50%"
         self.margin = "0%"
         self.margin_mobile = "0%"
         self.margin_top = "0%"
         self.margin_top_tab = "0%"
+        self.Location = 0
+        self.Location_mob = 0
         self.form_data = form_data
         ran = randint(0, 1)
         if(form_data["Type"] == "Gethonis"):
@@ -43,12 +48,14 @@ class State(rx.State):
             model = form_data["Type"]
 
         self.messages.append((form_data["Message"], model, "Thinking..."))
-        yield        
+        yield       
         await asyncio.create_task(self.process_response(form_data, model, ran))
+        rx.scroll_to("bottom")
         self.change_messages(self.messages, 0, form_data["Message"], self.response, model)
 
     async def process_response(self, form_data: dict, model: str, ran: int):
         self.response = await asyncio.to_thread(self.backgroundEv, form_data, ran)
+
 
     @rx.event
     def backgroundEv(self, form_data, ran) -> str:
@@ -64,6 +71,9 @@ class State(rx.State):
         self.margin_mobile="50%"
         self.margin_top = "70%"
         self.margin_top_tab = "30%"
+        self.Location = 500
+        self.Location_mob = 400
+        self.CardWidth = "30%"
 
     def scroll_to_bottom(self):
         return rx.call_script("document.getElementById('chat-bottom').scrollIntoView()")
@@ -108,7 +118,7 @@ def qa(question: str, model: str, answer: str) -> rx.Component:
                     margin="1em"
                 )
             ),
-            width="500px"
+            width="700px"
         ),
         margin_y="1em",
         name=State.i,
@@ -117,7 +127,7 @@ def qa(question: str, model: str, answer: str) -> rx.Component:
 
 def qaMob(question: str, model: str, answer: str) -> rx.Component:
     return rx.fragment(
-        rx.box(rx.text(question, max_width="300px"), text_align="right", width="100%"),
+        rx.box(rx.text(question), text_align="right", width="100%"),
         rx.box(
             rx.cond(
             model != "DeepSeek",
@@ -141,7 +151,8 @@ def qaMob(question: str, model: str, answer: str) -> rx.Component:
                     margin="1em"
                 )
             ),
-            width="300px"
+            max_width="350px",
+            overflow_y="auto"
         ),
         margin_y="1em",
         name=State.i,
@@ -150,6 +161,7 @@ def qaMob(question: str, model: str, answer: str) -> rx.Component:
 
 def chat() -> rx.Component:
     return rx.box(
+
         rx.foreach(
             State.messages,
             lambda messages: qa(messages[0], messages[1], messages[2]),
@@ -170,426 +182,511 @@ def chatMob() -> rx.Component:
 
 
 def index() -> rx.Component:
-    return rx.container(
+    return rx.auto_scroll(
+        rx.box(
         rx.desktop_only(
-                rx.center(
-                    rx.hstack(
-                        rx.button(
-                            "Save", rx.badge("Soon", color_scheme="mint"), font_weight="bold", disabled=True, variant="ghost", padding="20px",
-                        ),
-                        justify="end",
-                        spacing="5",
-                        
-                        font_weight="bold"
-                    ),
-                    rx.hstack(
-                        rx.image(
-                            src="/favicon.ico",
-                            width="2em",
-                            height="auto",
-                            border_radius="25%",                    
-                        ),
-                        rx.heading(
-                            State.title, size="8", weight="bold"
-                        ),
-                        align_items="center",
-                        padding="20px"
-                    ),
-                    rx.hstack(
-                        rx.link("About", href="/aboutpage", font_weight="bold", variant="ghost", padding="20px"),
-                        justify="end",
-                        spacing="5",
-                        font_weight="bold"
-                    ),
-                    padding="20px",
-                    justify="between",
-                    align_items="center",
-            ),
-            rx.center(
-                rx.vstack(
+                rx.box(
                     rx.center(
+                        rx.hstack(
+                            rx.button(
+                                "Save", rx.badge("Soon", color_scheme="mint"), font_weight="bold", disabled=True, variant="ghost", padding="20px",
+                            ),
+                            justify="end",
+                            spacing="5",
+                            background_color="#111113",
+                            font_weight="bold"
+                        ),
+                        rx.hstack(
+                            rx.image(
+                                src="/favicon.ico",
+                                width="2em",
+                                height="auto",
+                                border_radius="25%",                    
+                            ),
+                            rx.heading(
+                                State.title, size="8", weight="bold"
+                            ),
+                            align_items="center",
+                            background_color="#111113",
+                            padding="20px"
+                        ),
+                        rx.hstack(
+                            rx.link("About", href="/aboutpage", font_weight="bold", variant="ghost", padding="20px"),
+                            justify="end",
+                            background_color="#111113",
+                            spacing="5",
+                            font_weight="bold"
+                        ),
                         width="100%",
-                        padding="5%"
+                        position="fixed",
+                        justify="between",
+                        align_items="center",
+                        background_color="#111113",
                     ),
-                    rx.center(
-                        rx.scroll_area(
-                            rx.center(
-                                chat(),
-                            ),
-                            scrollbars="vertical",
-                            style={"max-height": State.height},
+                    position="fixed",
+                    z_index="1000",
+                    background_color="#111113",
+                ),
+            rx.container(
+                rx.center(
+                    rx.vstack(
+                        rx.center(
                             width="100%",
-                            padding="5%",
-                            type="auto",
-                            visible=State.show_chat
+                            padding="5%"
                         ),
-                        width="100%"
-                    ),
-                    rx.center(
-                        rx.card(
-                            rx.form(
-                                rx.vstack(
-                                    rx.center(
-                                        rx.select.root(
-                                            rx.select.trigger(placeholder="Select Type"),
-                                            rx.select.content(
-                                                rx.select.group(
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.image(
-                                                                src="/favicon.ico",
-                                                                width="1.5em",
-                                                                height="auto",
-                                                                border_radius="25%",                    
-                                                            )
-                                                        ),
-                                                        value="Gethonis"
-                                                    ),
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.icon("sparkle", size=15),
-                                                            rx.badge("Soon", color_scheme="mint")
-                                                        ),
-                                                        value="OpenAI",
-                                                        disabled=True
-                                                    ),
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.icon("sparkles", size=15, color_scheme="tomato"),
-                                                            rx.badge("Soon", color_scheme="mint")
-                                                        ),
-                                                        value="DeepSeek",
-                                                        disabled=True
-                                                    ),
-                                                )
-                                            ),
-                                            name="Type",
-                                            value=State.value,
-                                            on_change=State.change_value,
-                                            size="3",
-                                            variant="ghost",
-                                            style={
-                                                "outline": "none",
-                                                "border_radius": "full"
-                                            }
-                                        ),
-                                        rx.input(
-                                            outline="none",
-                                            color="white",
-                                            size="3",
-                                            variant="soft",
-                                            placeholder="Type here and wait for the magic...",
-                                            background="none",
-                                            border="0px solid white",
-                                            panel_background="transparent",
-                                            radius="full",
-                                            width="90%",
-                                            name="Message",
-                                        ),
-                                        rx.button(rx.icon("send-horizontal", size=26, variant="ghost"), type="submit", variant="ghost", color_scheme="gray"),
-                                        width="100%",
-                                        spacing="5",
-                                    ),
+                        rx.center(
+                            rx.scroll_area(
+                                rx.center(
+                                    chat(),
                                 ),
-                                on_submit=State.handle_submit,
-                                reset_on_submit=True,
+                                scrollbars="vertical",
+                                width="auto",
+                                padding="5%",
+                                type="auto",
+                                visible=State.show_chat
                             ),
-                            variant="classic",
-                            padding="1em",
-                            padding_left="2em",
-                            padding_right="2em",
+                            rx.box(
+                                id="bottom"
+                            ),
                             width="100%"
                         ),
-                        width="100%",
-                        spacing="5"
 
-                    ),
-                    width="100%",
-                    margin_top=State.margin
+                        rx.center(
+                            rx.container(
+                                rx.center(
+                                    rx.card(
+                                        rx.form(
+                                            rx.vstack(
+                                                rx.center(
+                                                    rx.select.root(
+                                                        rx.select.trigger(placeholder="Select Type"),
+                                                        rx.select.content(
+                                                            rx.select.group(
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.image(
+                                                                            src="/favicon.ico",
+                                                                            width="1.5em",
+                                                                            height="auto",
+                                                                            border_radius="25%",                    
+                                                                        )
+                                                                    ),
+                                                                    value="Gethonis"
+                                                                ),
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.icon("sparkle", size=15),
+                                                                        rx.badge("Soon", color_scheme="mint")
+                                                                    ),
+                                                                    value="OpenAI",
+                                                                    disabled=True
+                                                                ),
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.icon("sparkles", size=15, color_scheme="tomato"),
+                                                                        rx.badge("Soon", color_scheme="mint")
+                                                                    ),
+                                                                    value="DeepSeek",
+                                                                    disabled=True
+                                                                ),
+                                                            )
+                                                        ),
+                                                        name="Type",
+                                                        value=State.value,
+                                                        on_change=State.change_value,
+                                                        size="3",
+                                                        variant="ghost",
+                                                        style={
+                                                            "outline": "none",
+                                                            "border_radius": "full"
+                                                        }
+                                                    ),
+                                                    rx.input(
+                                                        outline="none",
+                                                        color="white",
+                                                        size="3",
+                                                        variant="soft",
+                                                        placeholder="Type here and wait for the magic...",
+                                                        background="none",
+                                                        border="0px solid white",
+                                                        panel_background="transparent",
+                                                        radius="full",
+                                                        width="90%",
+                                                        name="Message",
+                                                        
+                                                        
+                                                    ),
+                                                    rx.button(rx.icon("send-horizontal", size=26, variant="ghost"), type="submit", variant="ghost", color_scheme="gray"),
+                                                    width="100%",
+                                                    spacing="5",
+                                                ),
+                                            ),
+                                            on_submit=State.handle_submit,
+                                            reset_on_submit=True,
+                                        ),
+                                        variant="ghost",
+                                        width=State.CardWidth,
+                                        bottom=State.Location,
+                                        margin="1em",
+                                        position="fixed",
+                                        border_radius="50px",
+                                        padding="1em",
+                                        border="none",
+                                        style={"border": "2px solid black"},
+                                    ),
+                                    spacing="5",
+                                    width="100%",
+                                    padding="1em",
+                                ),
+
+                            ),
+                            width="100%"
+
+                        ),
+                        width="100%",
+                        margin_top=State.margin
+                    )
                 )
-            )   
+            ),  
         ),
         rx.mobile_only(
-            rx.center(
-                    rx.hstack(
-                        rx.button(
-                            "Save", rx.badge("Soon", color_scheme="mint"), font_weight="bold", disabled=True, variant="ghost", padding="20px",
+            rx.box(
+                    rx.center(
+                        rx.hstack(
+                            rx.button(
+                                "Save", rx.badge("Soon", color_scheme="mint"), font_weight="bold", disabled=True, variant="ghost", padding="20px",
+                            ),
+                            justify="end",
+                            spacing="5",
+                            background_color="#111113",
+                            font_weight="bold"
                         ),
-                        justify="end",
-                        spacing="5",
-                        
-                        font_weight="bold"
-                    ),
-                    rx.hstack(
-                        rx.image(
-                            src="/favicon.ico",
-                            width="2em",
-                            height="auto",
-                            border_radius="25%",                    
+                        rx.hstack(
+                            rx.image(
+                                src="/favicon.ico",
+                                width="2em",
+                                height="auto",
+                                border_radius="25%",                    
+                            ),
+                            rx.heading(
+                                State.title, size="8", weight="bold"
+                            ),
+                            align_items="center",
+                            background_color="#111113",
+                            padding="20px"
                         ),
-                        rx.heading(
-                            State.title, size="7", weight="bold", text_align="center"
-                        ),
-                        align_items="center",
-                        padding_top="20px",
-                        padding_bottom="20px"
-                    ),
-                    rx.hstack(
+                        rx.hstack(
                             rx.link("About", href="/aboutpage", font_weight="bold", variant="ghost", padding="20px"),
-                        justify="end",
-                        spacing="5",
-                        font_size="15px",
-                        font_weight="bold"
-                    ),
-                    justify="between",
-                    align_items="center",
-            ),
-            rx.center(
-                rx.vstack(
-                    rx.center(
-                        rx.scroll_area(
-                            rx.center(
-                                chatMob(),
-                            ),
-                            scrollbars="vertical",
-                            style={"max-height": State.height,
-                                "scrollbar-width": "none",  # Firefox
-                                "-ms-overflow-style": "none",  # IE and Edge
-                                "&::-webkit-scrollbar": {"display": "none"}},
-                            padding="1em",
-                            width="100%",
-                            padding_top="1%",
-                            type="auto",
-                            visible=State.show_chat,
-                        ),
-                        width="100%"
-                    ),
-                    rx.center(
-                        rx.card(
-                            rx.form(
-                                rx.vstack(
-                                    rx.center(
-    
-                                        rx.select.root(
-                                            rx.select.trigger(placeholder="Select Type"),
-                                            rx.select.content(
-                                                rx.select.group(
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.image(
-                                                                src="/favicon.ico",
-                                                                width="1.5em",
-                                                                height="auto",
-                                                                border_radius="25%",                    
-                                                            )
-                                                        ),
-                                                        value="Gethonis"
-                                                    ),
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.icon("sparkle", size=15),
-                                                            rx.badge("Soon", color_scheme="mint")
-                                                        ),
-                                                        value="OpenAI",
-                                                        disabled=True
-                                                    ),
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.icon("sparkles", size=15, color_scheme="tomato"),
-                                                            rx.badge("Soon", color_scheme="mint")
-                                                        ),
-                                                        value="DeepSeek",
-                                                        disabled=True
-                                                    ),
-                                                )
-                                            ),
-                                            value=State.value,
-                                            on_change=State.change_value,
-                                            size="3",
-                                            variant="ghost",
-                                            name="Type",
-                                            style={
-                                                "outline": "none",
-                                                "border_radius": "full"
-                                            }
-                                        ),
-                                        rx.input(
-                                            outline="none",
-                                            color="white",
-                                            size="3",
-                                            variant="soft",
-                                            placeholder="Type here and wait for the magic...",
-                                            background="none",
-                                            border="0px solid white",
-                                            panel_background="transparent",
-                                            radius="full",
-                                            width="90%",
-                                            name="Message",
-                                        ),
-                                        rx.button(rx.icon("send-horizontal", size=26, variant="ghost"), type="submit", variant="ghost", color_scheme="gray"),
-                                        width="100%",
-                                        spacing="2",
-                                    ),
-                                ),
-                                on_submit=State.handle_submit,
-                                reset_on_submit=True,
-                            ),
-                            variant="classic",
-                            padding="1em",
-                            padding_left="1em",
-                            padding_right="2em",
-                            width="100%"
+                            justify="end",
+                            background_color="#111113",
+                            spacing="5",
+                            font_weight="bold"
                         ),
                         width="100%",
-                        spacing="5"
-
+                        position="fixed",
+                        justify="between",
+                        align_items="center",
+                        background_color="#111113",
                     ),
-                    width="100%",
+                    position="fixed",
+                    z_index="1000",
+                    background_color="#111113",
+                ),
+            rx.container(
+                rx.center(
+                    rx.vstack(
+                        rx.center(
+                            width="100%",
+                            padding="5%"
+                        ),
+                        rx.center(
+                            rx.scroll_area(
+                                rx.center(
+                                    chatMob(),
+                                ),
+                                scrollbars="vertical",
+                                width="100%",
+                                padding="5%",
+                                type="auto",
+                                visible=State.show_chat
+                            ),
+                            rx.box(
+                                id="bottom"
+                            ),
+                            width="100%"
+                        ),
+
+                        rx.center(
+                            rx.container(
+                                rx.center(
+                                    rx.card(
+                                        rx.form(
+                                            rx.vstack(
+                                                rx.center(
+                                                    rx.select.root(
+                                                        rx.select.trigger(placeholder="Select Type"),
+                                                        rx.select.content(
+                                                            rx.select.group(
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.image(
+                                                                            src="/favicon.ico",
+                                                                            width="1.5em",
+                                                                            height="auto",
+                                                                            border_radius="25%",                    
+                                                                        )
+                                                                    ),
+                                                                    value="Gethonis"
+                                                                ),
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.icon("sparkle", size=15),
+                                                                        rx.badge("Soon", color_scheme="mint")
+                                                                    ),
+                                                                    value="OpenAI",
+                                                                    disabled=True
+                                                                ),
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.icon("sparkles", size=15, color_scheme="tomato"),
+                                                                        rx.badge("Soon", color_scheme="mint")
+                                                                    ),
+                                                                    value="DeepSeek",
+                                                                    disabled=True
+                                                                ),
+                                                            )
+                                                        ),
+                                                        name="Type",
+                                                        value=State.value,
+                                                        on_change=State.change_value,
+                                                        size="3",
+                                                        variant="ghost",
+                                                        style={
+                                                            "outline": "none",
+                                                            "border_radius": "full"
+                                                        }
+                                                    ),
+                                                    rx.input(
+                                                        outline="none",
+                                                        color="white",
+                                                        size="3",
+                                                        variant="soft",
+                                                        placeholder="Type here and wait for the magic...",
+                                                        background="none",
+                                                        border="0px solid white",
+                                                        panel_background="transparent",
+                                                        radius="full",
+                                                        width="90%",
+                                                        name="Message",
+                                                        
+                                                        
+                                                    ),
+                                                    rx.button(rx.icon("send-horizontal", size=26, variant="ghost"), type="submit", variant="ghost", color_scheme="gray"),
+                                                    width="100%",
+                                                    spacing="5",
+                                                ),
+                                            ),
+                                            on_submit=State.handle_submit,
+                                            reset_on_submit=True,
+                                        ),
+                                        variant="ghost",
+                                        width="100%",
+                                        bottom=State.Location_mob,
+                                        margin="1em",
+                                        position="fixed",
+                                        border_radius="50px",
+                                        padding="1em",
+                                        border="none",
+                                        style={"border": "2px solid black"},
+                                    ),
+                                    spacing="5",
+                                    width="100%",
+                                    padding="1em",
+                                ),
+
+                            ),
+                            width="100%"
+
+                        ),
+                        width="100%",
+                        margin_top=State.margin
+                    )
                 )
-            ),
-            margin_top=State.margin_top
+            ),  
         ),
         rx.tablet_only(
-            rx.center(
-                    rx.hstack(
-                        rx.button(
-                            "Save", rx.badge("Soon", color_scheme="mint"), font_weight="bold", disabled=True, variant="ghost", padding="20px",
+            rx.box(
+                    rx.center(
+                        rx.hstack(
+                            rx.button(
+                                "Save", rx.badge("Soon", color_scheme="mint"), font_weight="bold", disabled=True, variant="ghost", padding="20px",
+                            ),
+                            justify="end",
+                            spacing="5",
+                            background_color="#111113",
+                            font_weight="bold"
                         ),
-                        justify="end",
-                        spacing="5",
-                        
-                        font_weight="bold"
-                    ),
-                    rx.hstack(
-                        rx.image(
-                            src="/favicon.ico",
-                            width="2em",
-                            height="auto",
-                            border_radius="25%",                    
+                        rx.hstack(
+                            rx.image(
+                                src="/favicon.ico",
+                                width="2em",
+                                height="auto",
+                                border_radius="25%",                    
+                            ),
+                            rx.heading(
+                                State.title, size="8", weight="bold"
+                            ),
+                            align_items="center",
+                            background_color="#111113",
+                            padding="20px"
                         ),
-                        rx.heading(
-                            State.title, size="8", weight="bold", text_align="center"
-                        ),
-                        align_items="center",
-                        padding_top="20px",
-                        padding_bottom="20px"
-                    ),
-                    rx.hstack(
+                        rx.hstack(
                             rx.link("About", href="/aboutpage", font_weight="bold", variant="ghost", padding="20px"),
-                        justify="end",
-                        spacing="5",
-                        
-                        font_weight="bold"
-                    ),
-                    justify="between",
-                    align_items="center",
-            ),
-            rx.center(
-                rx.vstack(
-                    rx.center(
-                        rx.scroll_area(
-                            rx.center(
-                                chat(),
-                            ),
-                            scrollbars="vertical",
-                            style={"max-height": State.height,
-                                "scrollbar-width": "none",  # Firefox
-                                "-ms-overflow-style": "none",  # IE and Edge
-                                "&::-webkit-scrollbar": {"display": "none"}},
-                            padding="1em",
-                            width="100%",
-                            padding_top="1%",
-                            type="auto",
-                            visible=State.show_chat,
-                        ),
-                        width="100%"
-                    ),
-                    rx.center(
-                        rx.card(
-                            rx.form(
-                                rx.vstack(
-                                    rx.center(
-    
-                                        rx.select.root(
-                                            rx.select.trigger(placeholder="Select Type"),
-                                            rx.select.content(
-                                                rx.select.group(
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.image(
-                                                                src="/favicon.ico",
-                                                                width="1.5em",
-                                                                height="auto",
-                                                                border_radius="25%",                    
-                                                            )
-                                                        ),
-                                                        value="Gethonis"
-                                                    ),
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.icon("sparkle", size=15),
-                                                            rx.badge("Soon", color_scheme="mint")
-                                                        ),
-                                                        value="OpenAI",
-                                                        disabled=True
-                                                    ),
-                                                    rx.select.item(
-                                                        rx.hstack(
-                                                            rx.icon("sparkles", size=15, color_scheme="tomato"),
-                                                            rx.badge("Soon", color_scheme="mint")
-                                                        ),
-                                                        value="DeepSeek",
-                                                        disabled=True
-                                                    ),
-                                                )
-                                            ),
-                                            value=State.value,
-                                            on_change=State.change_value,
-                                            size="3",
-                                            variant="ghost",
-                                            name="Type",
-                                            style={
-                                                "outline": "none",
-                                                "border_radius": "full"
-                                            }
-                                        ),
-                                        rx.input(
-                                            outline="none",
-                                            color="white",
-                                            size="3",
-                                            variant="soft",
-                                            placeholder="Type here and wait for the magic...",
-                                            background="none",
-                                            border="0px solid white",
-                                            panel_background="transparent",
-                                            radius="full",
-                                            width="90%",
-                                            name="Message",
-                                        ),
-                                        rx.button(rx.icon("send-horizontal", size=26, variant="ghost"), type="submit", variant="ghost", color_scheme="gray"),
-                                        width="100%",
-                                        spacing="2",
-                                    ),
-                                ),
-                                on_submit=State.handle_submit,
-                                reset_on_submit=True,
-                            ),
-                            variant="classic",
-                            padding="1em",
-                            padding_left="1em",
-                            padding_right="2em",
-                            width="100%"
+                            justify="end",
+                            background_color="#111113",
+                            spacing="5",
+                            font_weight="bold"
                         ),
                         width="100%",
-                        spacing="5"
-
+                        position="fixed",
+                        justify="between",
+                        align_items="center",
+                        background_color="#111113",
                     ),
-                    width="100%",
+                    position="fixed",
+                    z_index="1000",
+                    background_color="#111113",
+                ),
+            rx.container(
+                rx.center(
+                    rx.vstack(
+                        rx.center(
+                            width="100%",
+                            padding="5%"
+                        ),
+                        rx.center(
+                            rx.scroll_area(
+                                rx.center(
+                                    chat(),
+                                ),
+                                scrollbars="vertical",
+                                width="100%",
+                                padding="5%",
+                                type="auto",
+                                visible=State.show_chat
+                            ),
+                            rx.box(
+                                id="bottom"
+                            ),
+                            width="100%"
+                        ),
+
+                        rx.center(
+                            rx.container(
+                                rx.center(
+                                    rx.card(
+                                        rx.form(
+                                            rx.vstack(
+                                                rx.center(
+                                                    rx.select.root(
+                                                        rx.select.trigger(placeholder="Select Type"),
+                                                        rx.select.content(
+                                                            rx.select.group(
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.image(
+                                                                            src="/favicon.ico",
+                                                                            width="1.5em",
+                                                                            height="auto",
+                                                                            border_radius="25%",                    
+                                                                        )
+                                                                    ),
+                                                                    value="Gethonis"
+                                                                ),
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.icon("sparkle", size=15),
+                                                                        rx.badge("Soon", color_scheme="mint")
+                                                                    ),
+                                                                    value="OpenAI",
+                                                                    disabled=True
+                                                                ),
+                                                                rx.select.item(
+                                                                    rx.hstack(
+                                                                        rx.icon("sparkles", size=15, color_scheme="tomato"),
+                                                                        rx.badge("Soon", color_scheme="mint")
+                                                                    ),
+                                                                    value="DeepSeek",
+                                                                    disabled=True
+                                                                ),
+                                                            )
+                                                        ),
+                                                        name="Type",
+                                                        value=State.value,
+                                                        on_change=State.change_value,
+                                                        size="3",
+                                                        variant="ghost",
+                                                        style={
+                                                            "outline": "none",
+                                                            "border_radius": "full"
+                                                        }
+                                                    ),
+                                                    rx.input(
+                                                        outline="none",
+                                                        color="white",
+                                                        size="3",
+                                                        variant="soft",
+                                                        placeholder="Type here and wait for the magic...",
+                                                        background="none",
+                                                        border="0px solid white",
+                                                        panel_background="transparent",
+                                                        radius="full",
+                                                        width="90%",
+                                                        name="Message",
+                                                        
+                                                        
+                                                    ),
+                                                    rx.button(rx.icon("send-horizontal", size=26, variant="ghost"), type="submit", variant="ghost", color_scheme="gray"),
+                                                    width="100%",
+                                                    spacing="5",
+                                                ),
+                                            ),
+                                            on_submit=State.handle_submit,
+                                            reset_on_submit=True,
+                                        ),
+                                        variant="ghost",
+                                        width=State.CardWidth,
+                                        bottom=State.Location,
+                                        margin="1em",
+                                        position="fixed",
+                                        border_radius="50px",
+                                        padding="1em",
+                                        border="none",
+                                        style={"border": "2px solid black"},
+                                    ),
+                                    spacing="5",
+                                    width="100%",
+                                    padding="1em",
+                                ),
+
+                            ),
+                            width="100%"
+
+                        ),
+                        width="100%",
+                        margin_top=State.margin
+                    )
                 )
-            ),
-            margin_top=State.margin_top_tab
+            ),  
         )
         
+        ),
+        style={
+            "height": "100vh",
+            "overflowY": "auto",
+            "scrollBehavior": "smooth"
+        }
+
     )
 
 
